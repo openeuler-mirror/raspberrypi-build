@@ -1,23 +1,71 @@
 # raspberrypi-build
 
 #### 介绍
-Scripts of building images for Raspberry Pi
+
+构建树莓派镜像的脚本程序。
 
 #### 软件架构
-软件架构说明
 
+AArch64
 
 #### 安装教程
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+有两种方式获取该脚本：
+
+1.  下载该仓库源码。
+2.  基于 openEuler 20.09 的源仓库，使用 `rpm` 或 `dnf` 软件包管理命令安装 raspberrypi-build。
+
+    `dnf install raspberrypi-build`
+
+    安装 raspberrypi-build 后，树莓派镜像构建的脚本及相关文件会保存在 `/opt/raspberrypi-build`。
 
 #### 使用说明
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+构建镜像需执行命令：
+
+`sudo bash build-image.sh -d DIR -r REPO -n IMAGE_NAME`
+
+各个参数意义：
+
+1.  -d, --dir DIR
+
+    构建镜像和临时文件的输出目录，默认为脚本所在目录。如果 `DIR` 不存在则会自动创建。
+    
+    脚本运行结束后，会提示镜像的存储位置，默认保存在 `DIR/raspi_output/img/` 下。
+
+2.  -r, --repo REPO_INFO
+
+    必要参数！开发源 repo 文件的 URL 或者路径，也可以是开发源中资源库的 baseurl 列表。注意，如果该参数为资源库的 baseurl 列表，该参数需要使用双引号，各个 baseurl 之间以空格隔开。
+    
+    下面分别举例：
+    - 开发源 repo 文件的 URL：*暂无*
+    - 开发源的 repo 文件路径：`./openEuler-20.09.repo`
+
+        该文件的内容如下：
+        ```
+        [MAINLINE]
+        name=MAINLINE
+        baseurl=http://119.3.219.20:82/openEuler:/Mainline/standard_aarch64/
+        enabled=1
+        gpgcheck=0
+
+        [EPOL]
+        name=EPOL
+        baseurl=http://119.3.219.20:82/openEuler:/Epol/standard_aarch64/
+        enabled=1
+        gpgcheck=0
+        ```
+    - 资源库的 baseurl 列表：`"http://119.3.219.20:82/openEuler:/Mainline/standard_aarch64/ http://119.3.219.20:82/openEuler:/Epol/standard_aarch64/"`
+
+3.  -n, --name IMAGE_NAME
+    
+    构建的镜像名称。
+    
+    例如，`openEuler-20.09.img`。默认为`openEuler-aarch64-raspi.img`，或者根据 `-r, --repo REPO_INFO` 参数自动生成。
+
+4.  -h, --help
+    
+    显示帮助信息。
 
 #### 参与贡献
 
