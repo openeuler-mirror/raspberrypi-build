@@ -1,22 +1,72 @@
 # raspberrypi-build
 
 #### Description
-Scripts of building images for Raspberry Pi
+
+Scripts of building images for Raspberry Pi.
 
 #### Software Architecture
-Software architecture description
+
+AArch64
 
 #### Installation
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+There are two approaches to fetch the scripts:
+
+1.  Download the source code of this repository.
+2.  You can install raspberrypi-build using `rpm` or `dnf` command based on openEuler 20.09 repository.
+
+    `dnf install raspberrypi-build`
+
+    After installing raspberrypi-build, you can find the scripts and related files for building openEuler image of Raspberry Pi in `/opt/raspberrypi-build`.
 
 #### Instructions
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+Run the following command to build an image:
+
+`sudo bash build-image.sh -d DIR -r REPO -n IMAGE_NAME`
+
+The meaning of each parameter:
+
+1.  -d, --dir DIR
+
+    The directory for storing the image and other temporary files, which defaults to be the directory in which the script resides. If the `DIR` does not exist, it will be created automatically.
+
+    After building the image, you can find the image in `DIR/raspi_output/img/` as shown in the script output.
+
+2.  -r, --repo REPO_INFO
+
+    Required! The URL/path of target repo file, or the list of repositories' baseurls. Note that, the baseurls should be separated by space and enclosed in double quotes.
+    
+    Examples are as follows:
+    
+    - The URL of target repo file: *currently unavailable*
+    - The path of target repo file: `./openEuler-20.09.repo`
+
+        The content of the repo file is as follows:
+        ```
+        [MAINLINE]
+        name=MAINLINE
+        baseurl=http://119.3.219.20:82/openEuler:/Mainline/standard_aarch64/
+        enabled=1
+        gpgcheck=0
+
+        [EPOL]
+        name=EPOL
+        baseurl=http://119.3.219.20:82/openEuler:/Epol/standard_aarch64/
+        enabled=1
+        gpgcheck=0
+        ```
+    - List of repo's baseurls: `"http://119.3.219.20:82/openEuler:/Mainline/standard_aarch64/ http://119.3.219.20:82/openEuler:/Epol/standard_aarch64/"`
+
+3.  -n, --name IMAGE_NAME
+
+    The image name to be built.
+    
+    For example, `openEuler-20.09-RaspberryPi.aarch64.img`. The default is `openEuler-RaspberryPi.aarch64.img`, or it is automatically generated based on parameter: `-r, --repo REPO_INFO`.
+
+4.  -h, --help
+    
+    Display help information.
 
 #### Contribution
 
