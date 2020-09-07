@@ -61,7 +61,7 @@ AArch64
     
     构建的镜像名称。
     
-    例如，`openEuler-20.09.img`。默认为`openEuler-aarch64-raspi.img`，或者根据 `-r, --repo REPO_INFO` 参数自动生成。
+    例如，`openEuler-20.09-RaspberryPi.aarch64.img`。默认为`openEuler-RaspberryPi.aarch64.img`，或者根据 `-r, --repo REPO_INFO` 参数自动生成。
 
 4.  -h, --help
     

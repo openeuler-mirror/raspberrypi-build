@@ -106,7 +106,7 @@ prepare(){
         else
             img_name=${OS_NAME}
         fi
-        img_name=${img_name}-aarch64-raspi.img
+        img_name=${img_name}-RaspberryPi.aarch64.img
     else
         if [ "x${img_name:0-4}" != "x.img" ]; then
             img_name=${img_name}.img
