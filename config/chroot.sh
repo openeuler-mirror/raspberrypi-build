@@ -1,6 +1,6 @@
 #!/bin/bash
 systemctl enable sshd
-systemctl enable ntpd
+systemctl enable systemd-timesyncd
 systemctl enable hciuart
 echo openEuler > /etc/hostname
 echo "openEuler12#$" | passwd --stdin root

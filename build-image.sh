@@ -58,6 +58,60 @@ LOG(){
     echo `date` - INFO, $* | tee -a ${log_dir}/${builddate}.log
 }
 
+UMOUNT_ALL(){
+    set +e
+    if grep -q "${rootfs_dir}/dev " /proc/mounts ; then
+        umount -l ${rootfs_dir}/dev
+    fi
+    if grep -q "${rootfs_dir}/proc " /proc/mounts ; then
+        umount -l ${rootfs_dir}/proc
+    fi
+    if grep -q "${rootfs_dir}/sys " /proc/mounts ; then
+        umount -l ${rootfs_dir}/sys
+    fi
+    set -e
+}
+
+LOSETUP_D_IMG(){
+    set +e
+    if [ -d ${root_mnt} ]; then
+        if grep -q "${root_mnt} " /proc/mounts ; then
+            umount ${root_mnt}
+        fi
+    fi
+    if [ -d ${boot_mnt} ]; then
+        if grep -q "${boot_mnt} " /proc/mounts ; then
+            umount ${boot_mnt}
+        fi
+    fi
+    if [ "x$device" != "x" ]; then
+        kpartx -d ${device}
+        losetup -d ${device}
+        device=""
+    fi
+    if [ -d ${root_mnt} ]; then
+        rm -rf ${root_mnt}
+    fi
+    if [ -d ${boot_mnt} ]; then
+        rm -rf ${boot_mnt}
+    fi
+    set -e
+}
+
+INSTALL_PACKAGES(){
+    for item in $(cat $1)
+    do
+        dnf --installroot=${rootfs_dir}/ install -y $item
+        if [ $? == 0 ]; then
+            LOG install $item.
+        else
+            ERROR can not install $item.
+        fi
+    done
+}
+
+trap 'UMOUNT_ALL' EXIT
+
 prepare(){
     if [ ! -d ${tmp_dir} ]; then
         mkdir -p ${tmp_dir}
@@ -162,15 +216,7 @@ prepare(){
 make_rootfs(){
     LOG "make rootfs for ${repo_file} begin..."
     if [[ -d ${rootfs_dir} ]]; then
-        if [[ -d ${rootfs_dir}/dev && `ls ${rootfs_dir}/dev | wc -l` -gt 1 ]]; then
-            umount -l ${rootfs_dir}/dev
-        fi
-        if [[ -d ${rootfs_dir}/proc && `ls ${rootfs_dir}/proc | wc -l` -gt 0 ]]; then
-            umount -l ${rootfs_dir}/proc
-        fi
-        if [[ -d ${rootfs_dir}/sys && `ls ${rootfs_dir}/sys | wc -l` -gt 0 ]]; then
-            umount -l ${rootfs_dir}/sys
-        fi
+        UMOUNT_ALL
         rm -rf ${rootfs_dir}
     fi
     mkdir -p ${rootfs_dir}
@@ -189,22 +235,11 @@ make_rootfs(){
     # dnf --installroot=${rootfs_dir}/ install -y alsa-utils wpa_supplicant vim net-tools iproute iputils NetworkManager openssh-server passwd hostname ntp bluez pulseaudio-module-bluetooth
     # dnf --installroot=${rootfs_dir}/ install -y raspberrypi-kernel raspberrypi-firmware openEuler-repos
     set +e
-    for item in $(cat $CONFIG_RPM_LIST)
-    do
-        dnf --installroot=${rootfs_dir}/ install -y $item
-        if [ $? == 0 ]; then
-            LOG install $item.
-        else
-            ERROR can not install $item.
-        fi
-    done
-    cat ${rootfs_dir}/etc/ntp.conf | grep "^server*"
+    INSTALL_PACKAGES $CONFIG_RPM_LIST
+    cat ${rootfs_dir}/etc/systemd/timesyncd.conf | grep "^NTP*"
     if [ $? -ne 0 ]; then
-        echo -e "\nserver 0.cn.pool.ntp.org\nserver 1.asia.pool.ntp.org\nserver 2.asia.pool.ntp.org\nserver 127.0.0.1">>${rootfs_dir}/etc/ntp.conf
-    fi
-    cat ${rootfs_dir}/etc/ntp.conf | grep "^fudge*"
-    if [ $? -ne 0 ]; then
-        echo -e "\nfudge 127.0.0.1 stratum 10">>${rootfs_dir}/etc/ntp.conf
+        sed -i 's/#NTP=/NTP=0.cn.pool.ntp.org/g' ${rootfs_dir}/etc/systemd/timesyncd.conf
+        sed -i 's/#FallbackNTP=/FallbackNTP=1.asia.pool.ntp.org 2.asia.pool.ntp.org/g' ${rootfs_dir}/etc/systemd/timesyncd.conf
     fi
     set -e
     cp ${euler_dir}/hosts ${rootfs_dir}/etc/hosts
@@ -213,16 +248,18 @@ make_rootfs(){
     fi
     cp ${euler_dir}/ifup-eth0 $rootfs_dir/etc/sysconfig/network-scripts/ifup-eth0
     mkdir -p ${rootfs_dir}/usr/bin ${rootfs_dir}/lib/udev/rules.d ${rootfs_dir}/lib/systemd/system
+    if [ -d ${rootfs_dir}/usr/share/licenses/raspi ]; then
+        mkdir -p ${rootfs_dir}/usr/share/licenses/raspi
+    fi
     cp ${euler_dir}/*.rules ${rootfs_dir}/lib/udev/rules.d/
+    cp ${euler_dir}/LICENCE.* ${rootfs_dir}/usr/share/licenses/raspi/
     cp ${euler_dir}/chroot.sh ${rootfs_dir}/chroot.sh
     chmod +x ${rootfs_dir}/chroot.sh
     mount --bind /dev ${rootfs_dir}/dev
     mount -t proc /proc ${rootfs_dir}/proc
     mount -t sysfs /sys ${rootfs_dir}/sys
     chroot ${rootfs_dir} /bin/bash -c "echo 'Y' | /chroot.sh"
-    umount -l ${rootfs_dir}/dev
-    umount -l ${rootfs_dir}/proc
-    umount -l ${rootfs_dir}/sys
+    UMOUNT_ALL
     rm ${rootfs_dir}/etc/yum.repos.d/tmp.repo
     rm ${rootfs_dir}/chroot.sh
     LOG "make rootfs for ${repo_file} end."
@@ -230,16 +267,18 @@ make_rootfs(){
 
 make_img(){
     LOG "make ${img_file} begin..."
+    LOSETUP_D_IMG
     size=`du -sh --block-size=1MiB ${rootfs_dir} | cut -f 1 | xargs`
     size=$(($size+1100))
     losetup -D
     dd if=/dev/zero of=${img_file} bs=1MiB count=$size && sync
     parted ${img_file} mklabel msdos mkpart primary fat32 8192s 593919s
     parted ${img_file} -s set 1 boot
-    parted ${img_file} mkpart primary linux-swap 593920s 1593343s 
+    parted ${img_file} mkpart primary linux-swap 593920s 1593343s
     parted ${img_file} mkpart primary ext4 1593344s 100%
     device=`losetup -f --show -P ${img_file}`
     LOG "after losetup: ${device}"
+    trap 'LOSETUP_D_IMG' EXIT
     LOG "image ${img_file} created and mounted as ${device}"
     # loopX=`kpartx -va ${device} | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
     # LOG "after kpartx: ${loopX}"
@@ -253,22 +292,6 @@ make_img(){
     mkfs.vfat -n boot ${bootp}
     mkswap ${swapp}
     mkfs.ext4 ${rootp}
-    set +e
-    if [ -d ${root_mnt} ]; then
-        df -lh | grep ${root_mnt}
-        if [ $? -eq 0 ]; then
-            umount ${root_mnt}
-        fi
-        rm -rf ${root_mnt}
-    fi
-    if [ -d ${boot_mnt} ]; then
-        df -lh | grep ${boot_mnt}
-        if [ $? -eq 0 ]; then
-            umount ${boot_mnt}
-        fi
-        rm -rf ${boot_mnt}
-    fi
-    set -e
     mkdir -p ${root_mnt} ${boot_mnt}
     mount -t vfat -o uid=root,gid=root,umask=0000 ${bootp} ${boot_mnt}
     mount -t ext4 ${rootp} ${root_mnt}
@@ -282,6 +305,9 @@ make_img(){
     echo "UUID=${fstab_array[1]}  /boot vfat    defaults,noatime 0 0" >> ${rootfs_dir}/etc/fstab
     echo "UUID=${fstab_array[2]}  swap swap    defaults,noatime 0 0" >> ${rootfs_dir}/etc/fstab
 
+    if [ -d ${rootfs_dir}/boot/grub2 ]; then
+        rm -rf ${rootfs_dir}/boot/grub2
+    fi
     cp -a ${rootfs_dir}/boot/* ${boot_mnt}/
     cp ${euler_dir}/config.txt ${boot_mnt}/
     echo "console=serial0,115200 console=tty1 root=/dev/mmcblk0p3 rootfstype=ext4 elevator=deadline rootwait" > ${boot_mnt}/cmdline.txt
@@ -298,12 +324,7 @@ make_img(){
     popd
     sync
     sleep 10
-    umount ${root_mnt}
-    umount ${boot_mnt}
-
-    kpartx -d ${device}
-    losetup -d ${device}
-
+    LOSETUP_D_IMG
     rm ${tmp_dir}/rootfs.tar
     rm -rf ${rootfs_dir}
     losetup -D
@@ -352,6 +373,7 @@ CONFIG_RPM_LIST=${euler_dir}/rpmlist
 
 builddate=$(date +%Y%m%d)
 
+UMOUNT_ALL
 prepare
 IFS=$'\n'
 make_rootfs

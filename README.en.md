@@ -44,19 +44,19 @@ The meaning of each parameter:
 
         The content of the repo file is as follows:
         ```
-        [MAINLINE]
-        name=MAINLINE
-        baseurl=http://119.3.219.20:82/openEuler:/Mainline/standard_aarch64/
+        [OS]
+        name=OS
+        baseurl=http://119.3.219.20:82/openEuler:/20.09/standard_$basearch/
         enabled=1
         gpgcheck=0
 
         [EPOL]
         name=EPOL
-        baseurl=http://119.3.219.20:82/openEuler:/Epol/standard_aarch64/
+        baseurl=http://119.3.219.20:82/openEuler:/20.09:/Epol/standard_$basearch/
         enabled=1
         gpgcheck=0
         ```
-    - List of repo's baseurls: `"http://119.3.219.20:82/openEuler:/Mainline/standard_aarch64/ http://119.3.219.20:82/openEuler:/Epol/standard_aarch64/"`
+    - List of repo's baseurls: `"http://119.3.219.20:82/openEuler:/20.09/standard_aarch64/ http://119.3.219.20:82/openEuler:/20.09:/Epol/standard_aarch64/"`
 
 3.  -n, --name IMAGE_NAME
 
