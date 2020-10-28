@@ -3,7 +3,7 @@ systemctl enable sshd
 systemctl enable systemd-timesyncd
 systemctl enable hciuart
 echo openEuler > /etc/hostname
-echo "openEuler12#$" | passwd --stdin root
+echo "openeuler" | passwd --stdin root
 if [ -f /usr/share/zoneinfo/Asia/Shanghai ]; then
     if [ -f /etc/localtime ]; then
         rm -f /etc/localtime
