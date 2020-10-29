@@ -62,7 +62,7 @@ The meaning of each parameter:
 
     The image name to be built.
     
-    For example, `openEuler-20.09-RaspberryPi.aarch64.img`. The default is `openEuler-RaspberryPi.aarch64.img`, or it is automatically generated based on parameter: `-r, --repo REPO_INFO`.
+    For example, `openEuler-20.09-raspi-aarch64.img`. The default is `openEuler-raspi-aarch64.img`, or it is automatically generated based on parameter: `-n, --name IMAGE_NAME`.
 
 4.  -h, --help
     
