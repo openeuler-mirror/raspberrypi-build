@@ -44,25 +44,25 @@ The meaning of each parameter:
 
         The content of the repo file is as follows:
         ```
-        [MAINLINE]
-        name=MAINLINE
-        baseurl=http://119.3.219.20:82/openEuler:/Mainline/standard_aarch64/
+        [OS]
+        name=OS
+        baseurl=http://119.3.219.20:82/openEuler:/20.09/standard_$basearch/
         enabled=1
         gpgcheck=0
 
         [EPOL]
         name=EPOL
-        baseurl=http://119.3.219.20:82/openEuler:/Epol/standard_aarch64/
+        baseurl=http://119.3.219.20:82/openEuler:/20.09:/Epol/standard_$basearch/
         enabled=1
         gpgcheck=0
         ```
-    - List of repo's baseurls: `"http://119.3.219.20:82/openEuler:/Mainline/standard_aarch64/ http://119.3.219.20:82/openEuler:/Epol/standard_aarch64/"`
+    - List of repo's baseurls: `"http://119.3.219.20:82/openEuler:/20.09/standard_aarch64/ http://119.3.219.20:82/openEuler:/20.09:/Epol/standard_aarch64/"`
 
 3.  -n, --name IMAGE_NAME
 
     The image name to be built.
     
-    For example, `openEuler-20.09-RaspberryPi.aarch64.img`. The default is `openEuler-RaspberryPi.aarch64.img`, or it is automatically generated based on parameter: `-r, --repo REPO_INFO`.
+    For example, `openEuler-20.09-raspi-aarch64.img`. The default is `openEuler-raspi-aarch64.img`, or it is automatically generated based on parameter: `-n, --name IMAGE_NAME`.
 
 4.  -h, --help
     

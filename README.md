@@ -43,25 +43,25 @@ AArch64
 
         该文件的内容如下：
         ```
-        [MAINLINE]
-        name=MAINLINE
-        baseurl=http://119.3.219.20:82/openEuler:/Mainline/standard_aarch64/
+        [OS]
+        name=OS
+        baseurl=http://119.3.219.20:82/openEuler:/20.09/standard_$basearch/
         enabled=1
         gpgcheck=0
 
         [EPOL]
         name=EPOL
-        baseurl=http://119.3.219.20:82/openEuler:/Epol/standard_aarch64/
+        baseurl=http://119.3.219.20:82/openEuler:/20.09:/Epol/standard_$basearch/
         enabled=1
         gpgcheck=0
         ```
-    - 资源库的 baseurl 列表：`"http://119.3.219.20:82/openEuler:/Mainline/standard_aarch64/ http://119.3.219.20:82/openEuler:/Epol/standard_aarch64/"`
+    - 资源库的 baseurl 列表：`"http://119.3.219.20:82/openEuler:/20.09/standard_aarch64/ http://119.3.219.20:82/openEuler:/20.09:/Epol/standard_aarch64/"`
 
 3.  -n, --name IMAGE_NAME
     
     构建的镜像名称。
     
-    例如，`openEuler-20.09-RaspberryPi.aarch64.img`。默认为`openEuler-RaspberryPi.aarch64.img`，或者根据 `-r, --repo REPO_INFO` 参数自动生成。
+    例如，`openEuler-20.09-raspi-aarch64.img`。默认为`openEuler-raspi-aarch64.img`，或者根据 `-n, --name IMAGE_NAME` 参数自动生成。
 
 4.  -h, --help
     
