@@ -170,6 +170,7 @@ prepare(){
         mkdir -p ${log_dir}
     fi
     LOG "prepare begin..."
+    dnf clean all
     # dnf makecache
     # dnf install -y dnf-plugins-core tar parted dosfstools
 
