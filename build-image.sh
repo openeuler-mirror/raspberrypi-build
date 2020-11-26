@@ -197,7 +197,6 @@ prepare(){
     done
     set +e
     os_release_name=${OS_NAME}-release
-    # yumdownloader --downloaddir=${tmp_dir} ${os_release_name} -c ${repo_file}
     dnf ${repo_info} --disablerepo="*" --downloaddir=${tmp_dir}/ download ${os_release_name}
     if [ $? != 0 ]; then
         ERROR "Fail to download ${os_release_name}!"
@@ -218,7 +217,6 @@ make_rootfs(){
         UMOUNT_ALL
         rm -rf ${rootfs_dir}
     fi
-    mkdir -p ${rootfs_dir}
     mkdir -p ${rootfs_dir}/var/lib/rpm
     rpm --root ${rootfs_dir} --initdb
     rpm -ivh --nodeps --root ${rootfs_dir}/ ${os_release_name}
@@ -229,10 +227,7 @@ make_rootfs(){
         mkdir -p ${rootfs_dir}/etc/yum.repos.d
     fi
     cp ${repo_file} ${rootfs_dir}/etc/yum.repos.d/tmp.repo
-    # dnf --installroot=${rootfs_dir}/ install dnf --nogpgcheck -y # --repofrompath=tmp,${rootfs_dir}/etc/yum.repos.d/tmp.repo --disablerepo="*"
     dnf --installroot=${rootfs_dir}/ makecache
-    # dnf --installroot=${rootfs_dir}/ install -y alsa-utils wpa_supplicant vim net-tools iproute iputils NetworkManager openssh-server passwd hostname ntp bluez pulseaudio-module-bluetooth
-    # dnf --installroot=${rootfs_dir}/ install -y raspberrypi-kernel raspberrypi-firmware openEuler-repos
     set +e
     INSTALL_PACKAGES $CONFIG_RPM_LIST
     cat ${rootfs_dir}/etc/systemd/timesyncd.conf | grep "^NTP*"
@@ -280,8 +275,6 @@ make_img(){
     LOG "after losetup: ${device}"
     trap 'LOSETUP_D_IMG' EXIT
     LOG "image ${img_file} created and mounted as ${device}"
-    # loopX=`kpartx -va ${device} | sed -E 's/.*(loop[0-9])p.*/\1/g' | head -1`
-    # LOG "after kpartx: ${loopX}"
     kpartx -va ${device}
     loopX=${device##*\/}
     partprobe ${device}
@@ -361,23 +354,19 @@ fi
 
 OS_NAME=openEuler
 
-if [ "x${workdir}" == "x./" ]; then
-    workdir=${cur_dir}
-fi
+workdir=$(cd $workdir; pwd)
 if [ "x${workdir}" == "x/" ]; then
-    workdir=""
-elif [ "x$(dirname $workdir)" == "x/" ]; then
-    workdir=/$(basename $workdir)
+    workdir=/raspi_output
 else
-    workdir=$(cd "$(dirname $workdir)"; pwd)/$(basename $workdir)
+    workdir=${workdir}/raspi_output
 fi
 
-rootfs_dir=${workdir}/raspi_output/rootfs
-root_mnt=${workdir}/raspi_output/root
-boot_mnt=${workdir}/raspi_output/boot
-tmp_dir=${workdir}/raspi_output/tmp
-log_dir=${workdir}/raspi_output/log
-img_dir=${workdir}/raspi_output/img
+tmp_dir=${workdir}/tmp
+log_dir=${workdir}/log
+img_dir=${workdir}/img
+rootfs_dir=${workdir}/rootfs
+root_mnt=${workdir}/root
+boot_mnt=${workdir}/boot
 euler_dir=${cur_dir}/config
 CONFIG_RPM_LIST=${euler_dir}/rpmlist
 
