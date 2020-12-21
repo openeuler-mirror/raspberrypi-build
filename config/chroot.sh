@@ -2,6 +2,7 @@
 systemctl enable sshd
 systemctl enable systemd-timesyncd
 systemctl enable hciuart
+systemctl enable haveged
 echo openEuler > /etc/hostname
 echo "openeuler" | passwd --stdin root
 if [ -f /usr/share/zoneinfo/Asia/Shanghai ]; then
